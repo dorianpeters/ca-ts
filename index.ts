@@ -20,12 +20,12 @@ async function main() {
     : new Date();
 
   const addDaysStr = await prompt('Enter the number of days to add: ');
-  const daysToAdd = parseInt(addDaysStr, 10);
+  const daysToAdd = parseInt(addDaysStr);
 
   const newDate = addDays(dateObject, daysToAdd);
 
   console.log('The new date is:');
-  console.log(format(newDate, 'yyyy-MM-dd'));
+  console.log(format(newDate, 'EEEE, MMMM d, yyyy'));
 
   rl.close();
 }
