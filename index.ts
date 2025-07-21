@@ -1,5 +1,5 @@
 import * as readline from "node:readline";
-import { parse, format, addDays } from "date-fns";
+import { parse, format, addDays, isWeekend, startOfDay } from "date-fns";
 import { holidaySet } from "./holidays.ts";
 
 const rl = readline.createInterface({
@@ -17,20 +17,18 @@ async function main() {
   );
 
   const dateObject = startDateStr
-    ? parse(startDateStr, "MM-dd-yyyy", new Date())
-    : new Date();
+    ? startOfDay(parse(startDateStr, "MM-dd-yyyy", new Date()))
+    : startOfDay(new Date());
 
   const addDaysStr = await prompt(
     "Enter the numbers of days to add, separated by spaces or commas: ",
   );
   const daysToAddArray: number[] = addDaysStr
-    .split(/[\\s,]+/)
+    .split(/[\s,]+/)
     .map((str) => parseInt(str.trim()))
     .filter((num) => !isNaN(num));
 
   const newDates = calculateCalendarDays(dateObject, daysToAddArray);
-  console.log("The new dates based on differentials are:");
-  console.log(newDates); // Assuming calculateCalendarDays returns an array or string representation
 
   console.log("The new dates are:");
   newDates.forEach((date) => {
@@ -41,31 +39,32 @@ async function main() {
 }
 
 function isCourtDay(date: Date) {
-  const day = date.getDay(); // 0 = Sunday, 6 = Saturday
-  // Use local date string to avoid timezone issues
-  const iso =
-    date.getFullYear() +
-    "-" +
-    String(date.getMonth() + 1).padStart(2, "0") +
-    "-" +
-    String(date.getDate()).padStart(2, "0");
-  return day !== 0 && day !== 6 && !holidaySet.has(iso);
+  // Check if it's a weekend using date-fns
+  if (isWeekend(date)) {
+    return false;
+  }
+
+  // Use date-fns format to create ISO string
+  const iso = format(date, "yyyy-MM-dd");
+  return !holidaySet.has(iso);
 }
 
 // Adjust to previous valid court day
 function adjustBackwardToCourtDay(date: Date) {
-  while (!isCourtDay(date)) {
-    date.setDate(date.getDate() - 1);
+  let adjustedDate = date;
+  while (!isCourtDay(adjustedDate)) {
+    adjustedDate = addDays(adjustedDate, -1);
   }
-  return date;
+  return adjustedDate;
 }
 
 // Adjust to next valid court day
 function adjustForwardToCourtDay(date: Date) {
-  while (!isCourtDay(date)) {
-    date.setDate(date.getDate() + 1);
+  let adjustedDate = date;
+  while (!isCourtDay(adjustedDate)) {
+    adjustedDate = addDays(adjustedDate, 1);
   }
-  return date;
+  return adjustedDate;
 }
 
 function calculateCalendarDays(
@@ -73,15 +72,14 @@ function calculateCalendarDays(
   dateDifferentials: Array<number>,
 ) {
   const newDates = dateDifferentials.map((days) => {
-    let newDate = new Date(startingDate);
+    // Use date-fns addDays instead of native Date methods
+    const newDate = addDays(startingDate, days);
+
     if (days > 0) {
-      newDate.setDate(newDate.getDate() + days);
-      newDate = adjustForwardToCourtDay(newDate);
+      return adjustForwardToCourtDay(newDate);
     } else {
-      newDate.setDate(newDate.getDate() - days);
-      newDate = adjustBackwardToCourtDay(newDate);
+      return adjustBackwardToCourtDay(newDate);
     }
-    return newDate;
   });
   return newDates;
 }
