@@ -5,7 +5,7 @@
   "main": "index.ts",
   "type": "module",
   "scripts": {
-    "run": "node --experimental-strip-types index.ts"
+    "run": "node --disable-warning=ExperimentalWarning --experimental-strip-types index.ts"
   },
   "keywords": [],
   "author": "",

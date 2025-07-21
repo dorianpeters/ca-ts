@@ -12,7 +12,7 @@ function prompt(question: string): Promise<string> {
 
 async function main() {
   const startDateStr = await prompt(
-    'Enter the starting date in MM-DD-YYYY format - default = today: '
+    'Enter the starting date in MM-DD-YYYY format (default = today): '
   );
 
   const dateObject = startDateStr
